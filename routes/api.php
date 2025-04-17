@@ -10,9 +10,9 @@ use App\Http\Controllers\API\CategoryController;
 use App\Http\Controllers\API\OrderItemController;
 use App\Http\Controllers\API\ProductImageController;
 use App\Http\Controllers\API\CouponController;
-use App\Http\Controllers\Api\MessageController;
-use App\Http\Controllers\Api\DashboardController;
-use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\API\MessageController;
+use App\Http\Controllers\API\DashboardController;
+use App\Http\Controllers\API\UserController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
