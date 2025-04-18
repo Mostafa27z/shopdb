@@ -12,8 +12,10 @@ class Order extends Model
     use HasFactory;
 
     protected $fillable = [
-        'customer_name', 'phone', 'status', 'coupon_code', 'discount', 'total', 'image_url', 'user_id'
+        'customer_name', 'phone', 'status', 'coupon_code', 'discount', 'total',
+        'image_url', 'user_id', 'color', 'size' // ✅ Added
     ];
+    
 
     // Default values for newly created orders
     protected $attributes = [

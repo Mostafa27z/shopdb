@@ -65,6 +65,8 @@ class OrderController extends Controller
             'user_id' => $userId, // ✅ Add user ID
             'customer_name' => $request->customer_name,
             'phone' => $request->phone,
+            'color' => $request->color,          // ✅ Store color
+            'size' => $request->size, 
             'status' => $request->status ?? 'Pending',
             'total' => $request->total - $discount,
             'coupon_code' => $request->coupon_code,
