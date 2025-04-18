@@ -1,7 +1,5 @@
-# Use the official PHP image with Apache
 FROM php:8.2-apache
 
-# Install system and PHP dependencies
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
@@ -13,30 +11,37 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 
-# Enable Apache mod_rewrite and adjust DocumentRoot for Laravel public folder
 RUN a2enmod rewrite \
-    && sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf \
     && sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
 
-# Set working directory
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
+
 WORKDIR /var/www/html
 
-# Copy project files to the container
 COPY . .
 
-# Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Install Laravel dependencies
 RUN composer install --no-dev --optimize-autoloader --no-scripts
 
-# Set permissions for Laravel storage and cache
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+RUN cp .env.example .env
 
-# Set dynamic port for Railway and expose the correct port
+RUN php artisan key:generate --no-interaction
+
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html
+
+RUN chown -R www-data:www-data /var/www/html/public \
+    && chmod -R 755 /var/www/html/public
+
+RUN echo 'DirectoryIndex index.php' >> /etc/apache2/apache2.conf
+
+RUN echo '<Directory /var/www/html/public>' >> /etc/apache2/apache2.conf && \
+    echo '    AllowOverride All' >> /etc/apache2/apache2.conf && \
+    echo '    Require all granted' >> /etc/apache2/apache2.conf && \
+    echo '</Directory>' >> /etc/apache2/apache2.conf
+
 ENV PORT=8080
 EXPOSE 8080
 
-# Start Apache in the foreground
 CMD ["apache2-foreground"]
