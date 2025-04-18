@@ -1,66 +1,82 @@
 <?php
 
+// app/Http/Controllers/API/ProductController.php
+
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Product;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
     public function index() {
-        return Product::all();
+        return Product::with('images')->get();
     }
 
     public function show($id) {
-        return Product::findOrFail($id);
+        return Product::with('images')->findOrFail($id);
     }
-    public function update(Request $request, $id)
-    {
+
+    public function store(Request $request) {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'category' => 'string|max:255',
+            'price' => 'required|numeric',
+            'stock' => 'integer',
+            'description' => 'nullable|string',
+            'image' => 'nullable|image|max:2048',
+        ]);
+
+        $product = Product::create($request->only([
+            'name', 'category', 'price', 'stock', 'description'
+        ]));
+
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('product_images', 'public');
+            $product->images()->create(['image_path' => $path]);
+        }
+
+        return response()->json($product->load('images'), 201);
+    }
+
+    public function update(Request $request, $id) {
         $product = Product::findOrFail($id);
-    
+
         $request->validate([
             'name' => 'required|string',
             'description' => 'nullable|string',
             'price' => 'required|numeric',
-            'image' => 'nullable|string',
+            'image' => 'nullable|image|max:2048',
         ]);
-    
-        $product->update($request->only(['name', 'description', 'price', 'image']));
-    
-        return response()->json(['message' => 'Product updated successfully', 'product' => $product]);
+
+        $product->update($request->only(['name', 'description', 'price']));
+
+        if ($request->hasFile('image')) {
+            // Optionally delete old images here if needed
+            $path = $request->file('image')->store('product_images', 'public');
+            $product->images()->create(['image_path' => $path]);
+        }
+
+        return response()->json(['message' => 'Product updated successfully', 'product' => $product->load('images')]);
     }
-    public function destroy($id)
-{
-    $product = Product::find($id);
-    
-    if (!$product) {
-        return response()->json(['message' => 'Product not found'], 404);
+
+    public function destroy($id) {
+        $product = Product::find($id);
+
+        if (!$product) {
+            return response()->json(['message' => 'Product not found'], 404);
+        }
+
+        foreach ($product->images as $image) {
+            Storage::disk('public')->delete($image->image_path);
+            $image->delete();
+        }
+
+        $product->delete();
+
+        return response()->json(['message' => 'Product deleted successfully']);
     }
-
-    $product->delete();
-
-    return response()->json(['message' => 'Product deleted successfully']);
 }
-public function store(Request $request)
-{
-    $request->validate([
-        'name' => 'required|string|max:255',
-        'category' => 'string|max:255',
-        'price' => 'required|numeric',
-        'stock' => 'required|integer',
-        'description' => 'nullable|string',
-    ]);
 
-    $product = Product::create([
-        'name' => $request->name,
-        'category' => $request->category,
-        'price' => $request->price,
-        'stock' => $request->stock,
-        'description' => $request->description,
-    ]);
-
-    return response()->json($product, 201);
-}
-    // Add any other methods here
-}
