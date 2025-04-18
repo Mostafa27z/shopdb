@@ -24,6 +24,8 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 RUN composer install --no-dev --optimize-autoloader --no-scripts
 
+RUN cp .env.example .env
+
 RUN php artisan key:generate --no-interaction
 
 RUN chown -R www-data:www-data /var/www/html \
