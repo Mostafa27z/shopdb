@@ -23,6 +23,7 @@ class OrderController extends Controller
             'total' => 'numeric',
             'coupon_code' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'notes' => 'nullable|string', // ✅ Validate notes
         ]);
 
         $discount = 0;
@@ -62,16 +63,17 @@ class OrderController extends Controller
 
         // Create the order
         $order = Order::create([
-            'user_id' => $userId, // ✅ Add user ID
+            'user_id' => $userId,
             'customer_name' => $request->customer_name,
             'phone' => $request->phone,
-            'color' => $request->color,          // ✅ Store color
-            'size' => $request->size, 
+            'color' => $request->color,
+            'size' => $request->size,
             'status' => $request->status ?? 'Pending',
             'total' => $request->total - $discount,
             'coupon_code' => $request->coupon_code,
             'discount' => $discount,
             'image_url' => $imageUrl,
+            'notes' => $request->notes, // ✅ Store notes
         ]);
 
         return response()->json($order, 201);
@@ -82,14 +84,13 @@ class OrderController extends Controller
         $request->validate([
             'status' => 'required|string',
         ]);
-    
+
         $order = Order::findOrFail($id);
         $order->status = $request->status;
         $order->save();
-    
+
         return response()->json(['message' => 'Order status updated successfully.']);
     }
-    
 
     public function destroy($id)
     {

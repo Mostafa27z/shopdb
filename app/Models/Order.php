@@ -13,8 +13,9 @@ class Order extends Model
 
     protected $fillable = [
         'customer_name', 'phone', 'status', 'coupon_code', 'discount', 'total',
-        'image_url', 'user_id', 'color', 'size' // ✅ Added
+        'image_url', 'user_id', 'color', 'size', 'notes' // ✅ Added notes here
     ];
+    
     
 
     // Default values for newly created orders
