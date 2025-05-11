@@ -26,41 +26,54 @@ class ProductController extends Controller
             'price' => 'required|numeric',
             'stock' => 'integer',
             'description' => 'nullable|string',
-            'image' => 'nullable|image|max:2048',
+            'images.*' => 'nullable|image|max:2048', // multiple images
         ]);
-
+    
         $product = Product::create($request->only([
             'name', 'category', 'price', 'stock', 'description'
         ]));
-
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('product_images', 'public');
-            $product->images()->create(['image_path' => $path]);
+    
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $image) {
+                $path = $image->store('product_images', 'public');
+                $product->images()->create(['image_path' => $path]);
+            }
         }
-
+    
         return response()->json($product->load('images'), 201);
     }
-
+    
     public function update(Request $request, $id) {
         $product = Product::findOrFail($id);
-
+    
         $request->validate([
             'name' => 'required|string',
             'description' => 'nullable|string',
             'price' => 'required|numeric',
-            'image' => 'nullable|image|max:2048',
+            'images.*' => 'nullable|image|max:9000', // multiple images
         ]);
-
+    
         $product->update($request->only(['name', 'description', 'price']));
-
-        if ($request->hasFile('image')) {
-            // Optionally delete old images here if needed
-            $path = $request->file('image')->store('product_images', 'public');
-            $product->images()->create(['image_path' => $path]);
+    
+        if ($request->hasFile('images')) {
+            // optional: delete old images
+            foreach ($product->images as $image) {
+                Storage::disk('public')->delete($image->image_path);
+                $image->delete();
+            }
+    
+            foreach ($request->file('images') as $image) {
+                $path = $image->store('product_images', 'public');
+                $product->images()->create(['image_path' => $path]);
+            }
         }
-
-        return response()->json(['message' => 'Product updated successfully', 'product' => $product->load('images')]);
+    
+        return response()->json([
+            'message' => 'Product updated successfully',
+            'product' => $product->load('images')
+        ]);
     }
+    
 
     public function destroy($id) {
         $product = Product::find($id);
