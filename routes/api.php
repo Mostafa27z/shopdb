@@ -82,7 +82,7 @@ Route::apiResource('product-images', ProductImageController::class);
 
 // Route::apiResource('coupons', CouponController::class);
 Route::post('coupons/validate', [CouponController::class, 'validateCode']);
-Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('coupons', CouponController::class);
     // Route::get('stats', [DashboardController::class, 'stats']);
     // Route::get('recent-orders', [DashboardController::class, 'recentOrders']);
